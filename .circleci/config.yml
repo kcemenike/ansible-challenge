@@ -1,32 +1,27 @@
-version: 2.1
-docker-default: &docker-node
-  docker:
-    - image: circleci/node:14
+version: '2.1'
+orbs:
+  aws-cli: circleci/aws-cli@3.1
 jobs:
-  cache_inventory:
-    <<: *docker-node
+  aws-cli-example:
+    executor: aws-cli/default
     steps:
       - checkout
+      - aws-cli/setup:
+          profile-name: udaciuser
+      - run:
+          name: Get instances
+          command: >
+            aws ec2 describe-instances 
+            --query 'Reservations[*].Instances[*].PublicIpAddress' 
+            --output text >> inventory.txt
       - run: ls -al
       - run: pwd
       - save_cache:
           key: inventory
           paths:
             - ./inventory.txt
-  restore_inventory:
-    <<: *docker-node
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - inventory
-      - run: ls -al
-      - run: pwd
-
 workflows:
-  main:
+  aws-cli:
     jobs:
-      - cache_inventory
-      - restore_inventory:
-          requires:
-            - cache_inventory
+      - aws-cli-example:
+          context: aws
