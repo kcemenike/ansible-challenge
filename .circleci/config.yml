@@ -3,6 +3,8 @@ orbs:
   aws-cli: circleci/aws-cli@3.1
 jobs:
   aws-cli-example:
+    environment:
+      - PARAM_AWS_CLI_REGION: us-west-2
     executor: aws-cli/default
     steps:
       - checkout
