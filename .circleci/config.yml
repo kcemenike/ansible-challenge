@@ -8,6 +8,9 @@ jobs:
       - checkout
       - aws-cli/setup:
           profile-name: udaciuser
+      - run: echo $PARAM_AWS_CLI_ACCESS_KEY_ID
+      - run: echo $PARAM_AWS_CLI_SECRET_ACCESS_KEY
+      - run: echo $PARAM_AWS_CLI_REGION
       - run:
           name: Get instances
           command: >
