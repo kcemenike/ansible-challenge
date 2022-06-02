@@ -13,12 +13,10 @@ jobs:
       - run: echo $PARAM_AWS_CLI_ACCESS_KEY_ID
       - run: echo $PARAM_AWS_CLI_SECRET_ACCESS_KEY
       - run: echo $PARAM_AWS_CLI_REGION
+      - run: aws configure list
       - run:
           name: Get instances
-          command: >
-            echo aws ec2 describe-instances 
-            --query 'Reservations[*].Instances[*].PublicIpAddress' 
-            --output text
+          command: aws ec2 describe-instances -query 'Reservations[*].Instances[*].PublicIpAddress' --output text
       - run: ls -al
       - run: pwd
       - save_cache:
