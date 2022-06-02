@@ -1,0 +1,32 @@
+version: 2.1
+docker-default: $docker-node
+  docker:
+    - image: circleci/node:14
+jobs:
+  cache_inventory:
+    <<: *docker-node
+    steps:
+      - checkout
+      - run: ls -al
+      - run: pwd
+      - save_cache:
+          key: inventory
+          paths:
+            - ./inventory.txt
+  restore_inventory:
+    <<: *docker-node
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - inventory
+      - run: ls -al
+      - run: pwd
+
+workflows:
+  main:
+    jobs:
+      - cache_inventory
+      - restore_inventory:
+          requires:
+            - cache_inventory
