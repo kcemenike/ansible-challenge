@@ -1,0 +1,6 @@
+---
+- name: Exercise #1
+  hosts: web
+
+  roles:
+   - print

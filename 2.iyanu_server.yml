@@ -1,0 +1,220 @@
+Description: |
+  Udacity Project 2 - Server stack
+  Run the network stack FIRST!!!
+  To run: aws cloudformation create-stack --stack-name iyanu-server --template-body file://2.iyanu_server.yml --capabilities CAPABILITY_NAMED_IAM
+  To connect to private instance via bastion host with ssh-agent: https://towardsaws.com/ssh-into-the-private-server-through-bastion-host-f637aa5f5c17
+
+Parameters:
+  #Parameters needed for Udagram project
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: xxx
+  S3BucketName:
+    Description: >
+      A globally unique S3 bucket name. 
+      Please upload the src.zip to the bucket after creating this stack.
+    Type: String
+    Default: udagram-kelechi12345
+  KeyPair:
+    Description: The keypair to use for your instances
+    Type: String
+    Default: myKP
+  AMIToUse:
+    Description: The AMI to use for your instances (I am working in us-west-2)
+    Type: String
+    Default: ami-0ca285d4c2cda3300
+
+Resources:
+  # SERVER RESOURCES
+  LoadBalancerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http traffic to and from load balancer
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  WebServerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http and ssh to our load balancer
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 # change to your IP later
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Ref S3BucketName
+      MetricsConfigurations:
+        - Id: EntireBucket
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+  WebAppLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install unzip awscli httpd -y
+          systemctl start httpd
+          cd /var/www/html
+          aws s3 cp s3://${S3BucketName}/src.zip .
+          aws s3 rm s3://${S3BucketName}/src.zip
+          unzip -o src.zip
+      ImageId: !Ref AMIToUse
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref ProfileWithRolesForOurApp
+      SecurityGroups:
+        - Ref: WebServerSecGroup
+      InstanceType: t3.medium
+      BlockDeviceMappings:
+        - DeviceName: '/dev/sdk'
+          Ebs:
+            VolumeSize: '10'
+  WebAppGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PRIV-NETS'
+      LaunchConfigurationName:
+        Ref: WebAppLaunchConfig
+      MinSize: '2'
+      MaxSize: '5'
+      TargetGroupARNs:
+        - Ref: WebAppTargetGroup
+  WebAppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 8
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPCID'
+  WebAppLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SecurityGroups:
+        - Ref: LoadBalancerSecGroup
+      Subnets:
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PUB1-SN'
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PUB2-SN'
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: WebAppTargetGroup
+      LoadBalancerArn:
+        Ref: WebAppLB
+      Port: 80
+      Protocol: HTTP
+  ALBListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref 'WebAppTargetGroup'
+      Conditions:
+        - Field: path-pattern
+          Values: [/]
+      ListenerArn: !Ref 'Listener'
+      Priority: 1
+  BastionServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMIToUse
+      KeyName: !Ref KeyPair
+      InstanceType: t3.medium
+      Tags:
+        - Key: Name
+          Value: Bastion Server
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - Ref: WebServerSecGroup
+          SubnetId:
+            Fn::ImportValue:
+              Fn::Sub: '${EnvironmentName}-BAST-SN'
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum -y update
+          sudo yum install -y httpd
+          sudo systemctl start httpd
+  S3ReadOnlyEC2:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${EnvironmentName}-Role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: '/'
+  RolePolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AmazonS3ReadOnlyAccess
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:Put*
+              - s3:Get*
+              - s3:List*
+              - s3:Delete*
+            Resource:
+              - !Sub arn:aws:s3:::${S3BucketName}/
+              - !Sub arn:aws:s3:::${S3BucketName}/*
+      Roles:
+        - Ref: S3ReadOnlyEC2
+  ProfileWithRolesForOurApp:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: '/'
+      Roles:
+        - Ref: S3ReadOnlyEC2
+
+Outputs:
+  WebAppLoadBalancerDNSName:
+    Description: DNS name or Public URL of the Load Balancer
+    Value: !Join ['', ['http://', !GetAtt WebAppLB.DNSName]]
+    Export:
+      Name: !Sub ${EnvironmentName}-LB-DNSName
