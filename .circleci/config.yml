@@ -16,9 +16,9 @@ jobs:
       - run:
           name: Get instances
           command: >
-            aws ec2 describe-instances 
+            echo aws ec2 describe-instances 
             --query 'Reservations[*].Instances[*].PublicIpAddress' 
-            --output text >> inventory.txt
+            --output text
       - run: ls -al
       - run: pwd
       - save_cache:
