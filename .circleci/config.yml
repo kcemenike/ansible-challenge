@@ -8,8 +8,7 @@ jobs:
     executor: aws-cli/default
     steps:
       - checkout
-      # - aws-cli/setup:
-      #     profile-name: udaciuser
+      - aws-cli/setup
       - run: aws configure set aws_access_key_id $PARAM_AWS_CLI_ACCESS_KEY_ID
       - run: aws configure set aws_secret_access_key $PARAM_AWS_CLI_SECRET_ACCESS_KEY
       - run: aws configure set default.region $PARAM_AWS_CLI_REGION
