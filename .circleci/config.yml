@@ -1,5 +1,5 @@
 version: 2.1
-docker-default: }&docker-node
+docker-default: &docker-node
   docker:
     - image: circleci/node:14
 jobs:
