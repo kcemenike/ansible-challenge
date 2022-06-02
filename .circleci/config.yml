@@ -17,9 +17,10 @@ jobs:
       - run: export AWS_SECRET_ACCESS_KEY=$PARAM_AWS_CLI_SECRET_ACCESS_KEY
       - run: export AWS_DEFAULT_REGION=$PARAM_AWS_CLI_REGION
       - run: aws configure list
+      - run: aws iam list-users
       - run:
           name: Get instances
-          command: aws ec2 describe-instances -query 'Reservations[*].Instances[*].PublicIpAddress' --output text
+          command: aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text
       - run: ls -al
       - run: pwd
       - save_cache:
