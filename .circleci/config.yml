@@ -46,7 +46,7 @@ jobs:
       - run:
           name: Install deps
           command: |
-            apk add --update --no-cache ansible openssh
+            apk add --update --no-cache ansible
       - attach_workspace:
           at: .
       - run: ls -al
@@ -56,7 +56,6 @@ jobs:
           name: configure server
           command: |
             ansible-playbook -i inventory.txt main-remote.yml --key-file ~/.ssh/id_rsa_a0a85aaf03a2b2bdb63810870675e3b2
-
 workflows:
   main:
     jobs:
