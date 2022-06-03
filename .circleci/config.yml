@@ -1,17 +1,19 @@
 version: '2.1'
-orbs:
-  aws-cli: circleci/aws-cli@3.1
+# orbs:
+#   aws-cli: circleci/aws-cli@3.1
 jobs:
-  aws-config-and-get-instance-list:
-    environment:
-      - PARAM_AWS_CLI_REGION: us-west-2
-    executor: aws-cli/default
+  aws-get-instance-list:
+    docker:
+      - image: amazon/aws-cli
+    # environment:
+    #   - PARAM_AWS_CLI_REGION: us-west-2
+    # executor: aws-cli/default
     steps:
       - checkout
-      - aws-cli/setup
-      - run: aws configure set aws_access_key_id $PARAM_AWS_CLI_ACCESS_KEY_ID
-      - run: aws configure set aws_secret_access_key $PARAM_AWS_CLI_SECRET_ACCESS_KEY
-      - run: aws configure set default.region $PARAM_AWS_CLI_REGION
+      # - aws-cli/setup
+      # - run: aws configure set aws_access_key_id $PARAM_AWS_CLI_ACCESS_KEY_ID
+      # - run: aws configure set aws_secret_access_key $PARAM_AWS_CLI_SECRET_ACCESS_KEY
+      # - run: aws configure set default.region $PARAM_AWS_CLI_REGION
       - run: echo [all] > inventory.txt
       - run:
           name: Get instances
@@ -30,7 +32,9 @@ jobs:
       #     paths:
       #       - ./inventory.txt
   restore-inventory:
-    executor: aws-cli/default
+    # executor: aws-cli/default
+    docker:
+      - image: amazon/aws-cli
     steps:
       - checkout
       - attach_workspace:
@@ -40,12 +44,6 @@ jobs:
       #       - inventory
       - run: ls -al
       - run: cat inventory.txt
-  test:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run: echo hello world
   create-infra:
     docker:
       - image: amazon/aws-cli
@@ -61,9 +59,8 @@ jobs:
 workflows:
   aws-cli:
     jobs:
-      - test
-      - aws-config-and-get-instance-list
+      - aws-get-instance-list
       - restore-inventory:
           requires:
-            - aws-config-and-get-instance-list
+            - aws-get-instance-list
       - create-infra
