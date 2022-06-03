@@ -12,7 +12,7 @@ jobs:
           command: >
             aws cloudformation deploy
             --template-file ubuntu_server.yml
-            --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}
+            --stack-name kc-${CIRCLE_WORKFLOW_ID:0:5}
       - run:
           name: Update inventory file
           command: |
