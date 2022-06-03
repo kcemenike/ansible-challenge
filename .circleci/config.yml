@@ -42,9 +42,44 @@ jobs:
       - run: ls -al
       - run: cat inventory.txt
       - run:
-          name: configure server
-          command: |
-            ansible-playbook -i inventory.txt main-remote.yml
+          name: extraordinary shii
+          command: >
+            echo 
+            -----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAoKSZuqxo1b0mWe4/sih6si+qz2WGbGrfwJJgmLUcrdk8q5/Y
+ZjgII0zv+rtWvpso6XSoeeutFxfH/fgq60BKLWPND6q8W0HsbnRM8Dyhxm2y2ghE
+vX52sfYgFVaf5KGU46C79oiS4j44nce5y+cLRgm45nDSsvDPbDpx9XJRmR4EGQ8a
+js0zqsvD3lZ2gvXVvkUHAN0sRhW4ovRFIZ7gv33VzuqaENMRs3++Kwq66p9GDKzC
+gJ+sdfsVT+9AHMKAhiTPhSQ3AMLZXWhk/L2/GhdTfCCqwBXf7RMnIHbRzshked76
+4XTQXfuV8AYI6PFUixpM69gFJFthGGjv0qofQwIDAQABAoIBABFHQwWyD6CVtK9N
+kepOskvCFsQx7lBw+loTJHKoYEpOqFjpW3Q7KJzrZJB6X+0mcTMTCh/6+mYWd7tY
+Wv1sr83MAz1hJttF7vE+bxwT2W6nU+pho0sidA/WIkNJSu9jdck5+52buPi+qoZF
++jT1R+AjoZCfp/n5LsY8Tw+QWTh3to9eDa5pNdFu3SvhTF5kjssAAas9CgaaCtk4
+N+Rpib9PLOAsKZwkcFqENQ9WRMTlIzXXFYb5eiO+dNZ6hIV7HLPkkJaSZVKTxxBI
+Owq14pqMHrcptC8ej6dQsn57o5zrC3iDUI6bLnNOm4O8lSqs2b4TFHhdgI3zD8iK
+sO7SXJECgYEA9sjOTt8AK3Yglzx8fJWyuGX5QnsPGFcU51YQbgGgBBzTBtQ59ake
+WxjiWopci7E4DJ7SCHsD1WWxf0n1FlQsJgA1Jr42b5qvoY5CaIupzMoFhmFHgPMu
+WfjOUc8QpppElDwZs97h2+e8Ocj48fIUxA2VuQRaMy5cGuBNjQcY+csCgYEApqRO
+H07yZOZz80KloldGVxGqkU532eloagp/7Xk2GDOAyGSpiCzxYZ+R5Fo2jT5YgxTL
+Pf8bmZIQQZ/gahCnaoCpE9XRyDwpT9lXw+Xgb/Rg7UWKxzSitdxumuCFN2x9/RKi
+MUJIryajWQRKwoR2NRUmD4MKAetoDyPvBn6ZoWkCgYEA1B9OliTAdJsY8GYhasUR
+1cZxNl+oXfecFCy5+pSTAnX0Pc51817mpM8C4WhEnB48Wzy4tGlopii/JPZhIExB
+lnhfN2oQSGXhyTAKjOpfjZOopBVB7OkaUmO2lEMzwMChafku7pkJ8oeCFvlUYkL+
+7nXu2BWRoqSars9WWX5cTXkCgYB7blJLUG+smyIheikzkQ+R6Iz9qjCOIRvtB6/w
+Fwsha+ylAiKsshVs6QPoL4YeoqJvHVTZq/8mhhEyepiAF6vZ8EjMX2FOvnkfIu6m
+NLxEULAGr672lJ88s3TdlRY3kk3TyRyH/f/WdHkjs1EouXLRKMQTU01zVIm0RTqE
+BfwHmQKBgQCyLWv2RzDIItSgUw8rE+oAPrczdFzgPNr1Ds9QCsBRqVHn0tSz9BrP
+mhsgExMbNYGNwcHm/PJkOYrlxImrdtLtdDjwGTRr0EVoLEhSJLGhJxFPmcAbj06H
+FtVwaUobkzYwsuu+3uYIMVU7ghlEG4j9rf7EObLyv026J0o/7rpmJg==
+-----END RSA PRIVATE KEY----- >> key.pem
+      - run: ls -al
+      - run:
+          name: connect to server
+          command: ssh -i key.pem $(cat inventory.txt | grep -v [all])
+      # - run:
+      #     name: configure server
+      #     command: |
+      #       ansible-playbook -i inventory.txt main-remote.yml
 
 workflows:
   main:
