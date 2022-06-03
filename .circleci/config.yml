@@ -83,14 +83,14 @@ jobs:
             FtVwaUobkzYwsuu+3uYIMVU7ghlEG4j9rf7EObLyv026J0o/7rpmJg==
             -----END RSA PRIVATE KEY-----
             >> key.pem
-      - run: ls -al
-      - run:
-          name: connect to server
-          command: ssh -i key.pem ubuntu@$(cat inventory.txt | grep -v [all]) -o StrictHostKeyChecking=no
+      - run: ls -al ~/.ssh/
       # - run:
-      #     name: configure server
-      #     command: |
-      #       ansible-playbook -i inventory.txt main-remote.yml
+      #     name: connect to server
+      #     command: ssh -i key.pem ubuntu@$(cat inventory.txt | grep -v [all]) -o StrictHostKeyChecking=no
+      - run:
+          name: configure server
+          command: |
+            ansible-playbook -i inventory.txt main-remote.yml --key-file ~/.ssh/id_rsa_a0a85aaf03a2b2bdb63810870675e3b2
       - destroy-infra
 
 workflows:
