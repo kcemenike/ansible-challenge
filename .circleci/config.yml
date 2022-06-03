@@ -27,7 +27,7 @@ jobs:
           command: |
             echo [all] > inventory.txt
             aws ec2 describe-instances \
-            --filters Name='tag:aws:cloudformation:stack-name',Values='kc-${CIRCLE_WORKFLOW_ID:0:5}' \
+            --filters Name=tag:aws:cloudformation:stack-name,Values=kc-${CIRCLE_WORKFLOW_ID:0:5} \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --output text >> inventory.txt
       - run: cat inventory.txt
