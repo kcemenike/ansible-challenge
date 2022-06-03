@@ -21,17 +21,23 @@ jobs:
             --output text) >> inventory.txt
       - run: ls -al
       - run: cat inventory.txt
-      - save_cache:
-          key: inventory
+      - persist_to_workspace:
+          root: .
           paths:
-            - ./inventory.txt
+            - inventory.txt
+      # - save_cache:
+      #     key: inventory
+      #     paths:
+      #       - ./inventory.txt
   restore-inventory:
     executor: aws-cli/default
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - inventory
+      - attach_workspace:
+          at: .
+      # - restore_cache:
+      #     keys:
+      #       - inventory
       - run: ls -al
       - run: cat inventory.txt
 workflows:
