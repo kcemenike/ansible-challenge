@@ -2,7 +2,7 @@ version: '2.1'
 orbs:
   aws-cli: circleci/aws-cli@3.1
 jobs:
-  aws-cli-example:
+  aws-config-and-get-instance-list:
     environment:
       - PARAM_AWS_CLI_REGION: us-west-2
     executor: aws-cli/default
@@ -37,4 +37,7 @@ jobs:
 workflows:
   aws-cli:
     jobs:
-      - aws-cli-example
+      - aws-config-and-get-instance-list
+      - restore-inventory:
+          requires:
+            - aws-config-and-get-instance-list
