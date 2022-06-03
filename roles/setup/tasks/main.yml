@@ -1,12 +1,10 @@
 ---
-- name: 'update packages.'
-  become: yes
-  apt:
-    update_cache: yes
-- name: 'upgrade packages'
-  become: yes
+- name: 'update and upgrardepackages.'
+  become: true
   apt:
     upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400
 - name: remove unneeded deps
   become: yes
   apt:
