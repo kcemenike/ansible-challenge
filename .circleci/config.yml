@@ -3,17 +3,9 @@ orbs:
   aws-cli: circleci/aws-cli@3.1
 jobs:
   aws-get-instance-list:
-    # docker:
-    #   - image: amazon/aws-cli
-    # environment:
-    #   - PARAM_AWS_CLI_REGION: us-west-2
     executor: aws-cli/default
     steps:
       - checkout
-      # - aws-cli/setup
-      # - run: aws configure set aws_access_key_id $PARAM_AWS_CLI_ACCESS_KEY_ID
-      # - run: aws configure set aws_secret_access_key $PARAM_AWS_CLI_SECRET_ACCESS_KEY
-      # - run: aws configure set default.region $PARAM_AWS_CLI_REGION
       - run: echo [all] > inventory.txt
       - run:
           name: Get instances
@@ -27,21 +19,12 @@ jobs:
           root: .
           paths:
             - inventory.txt
-      # - save_cache:
-      #     key: inventory
-      #     paths:
-      #       - ./inventory.txt
   restore-inventory:
     executor: aws-cli/default
-    # docker:
-    #   - image: amazon/aws-cli
     steps:
       - checkout
       - attach_workspace:
           at: .
-      # - restore_cache:
-      #     keys:
-      #       - inventory
       - run: ls -al
       - run: cat inventory.txt
   create-infra:
@@ -56,11 +39,44 @@ jobs:
             --template-file ubuntu_server.yml
             --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}
             --region us-west-2
+      - run:
+          name: Update inventory file
+          command: |
+            echo [all] > inventory.txt
+            echo $(aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text) >> inventory.txt
+      - run: cat inventory.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - inventory.txt
+  configure-infra:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ['63:e6:ee:ef:ea:88:47:06:47:b7:b6:0e:29:b9:2b:61']
+      - run:
+          name: Install deps
+          command: |
+            apk add --update ansible
+      - attach_workspace:
+          at: .
+      - run: ls -al
+      - run: cat inventory.txt
+      - run:
+          name: configure server
+          command: |
+            ansible-playbook -i inventory.txt playbook.yml
+
 workflows:
   aws-cli:
     jobs:
-      - aws-get-instance-list
-      - restore-inventory:
-          requires:
-            - aws-get-instance-list
+      # - aws-get-instance-list
+      # - restore-inventory:
+      #     requires:
+      #       - aws-get-instance-list
       - create-infra
+      - configure-infra
