@@ -28,8 +28,7 @@ jobs:
       - run: ls -al
       - run: cat inventory.txt
   create-infra:
-    docker:
-      - image: amazon/aws-cli
+    executor: aws-cli/default
     steps:
       - checkout
       - run:
@@ -38,7 +37,6 @@ jobs:
             aws cloudformation deploy
             --template-file ubuntu_server.yml
             --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}
-            --region us-west-2
       - run:
           name: Update inventory file
           command: |
