@@ -1,6 +1,14 @@
 version: '2.1'
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
+
+commands:
+  destroy-infra:
+    steps:
+      - run:
+          name: destroy infrastructure
+          when: on_fail
+          command: aws cloudformation delete-stack --stack-name kc-${CIRCLE_WORKFLOW_ID:0:5}
 jobs:
   create-infra:
     executor: aws-cli/default
@@ -25,6 +33,7 @@ jobs:
           root: .
           paths:
             - inventory.txt
+      - destroy-infra
   configure-infra:
     docker:
       - image: python:3.7-alpine3.11
@@ -76,7 +85,7 @@ jobs:
       - run: ls -al
       - run:
           name: connect to server
-          command: ssh -i key.pem $(cat inventory.txt | grep -v [all])
+          command: ssh -i key.pem $(cat inventory.txt | grep -v [all]) -o StrickHostKeyChecking=no
       # - run:
       #     name: configure server
       #     command: |
