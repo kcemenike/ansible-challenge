@@ -1,4 +1,7 @@
 ---
+- name: kill all apt processes
+  become: yes
+  command: killall apt apt-get
 - name: 'update and upgrade packages.'
   become: yes
   apt:
