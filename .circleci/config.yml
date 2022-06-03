@@ -12,21 +12,28 @@ jobs:
       - run: aws configure set aws_access_key_id $PARAM_AWS_CLI_ACCESS_KEY_ID
       - run: aws configure set aws_secret_access_key $PARAM_AWS_CLI_SECRET_ACCESS_KEY
       - run: aws configure set default.region $PARAM_AWS_CLI_REGION
-      - run: aws configure list
-      - run: aws iam list-users
       - run: echo [all] > inventory.txt
       - run:
           name: Get instances
           command: >
-            aws ec2 describe-instances 
+            echo $(aws ec2 describe-instances 
             --query 'Reservations[*].Instances[*].PublicIpAddress' 
-            --output text >> inventory.txt
+            --output text) >> inventory.txt
       - run: ls -al
       - run: cat inventory.txt
       - save_cache:
           key: inventory
           paths:
             - ./inventory.txt
+  restore-inventory:
+    executor: aws-cli/default
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - inventory
+      - run: ls -al
+      - run: cat inventory.txt
 workflows:
   aws-cli:
     jobs:
