@@ -79,4 +79,4 @@ workflows:
       - configure-infra:
           requires:
             - create-infra
-      - smoke-test
+      # - smoke-test
