@@ -2,6 +2,9 @@
 - name: kill all apt processes
   become: yes
   command: killall apt
+- name: configure dpk
+  become: yes
+  command: dpkg --configure -a
 - name: 'update and upgrade packages.'
   become: yes
   apt:

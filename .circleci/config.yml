@@ -56,6 +56,22 @@ jobs:
           name: configure server
           command: |
             ansible-playbook -i inventory.txt main-remote.yml --key-file ~/.ssh/id_rsa_a0a85aaf03a2b2bdb63810870675e3b2
+  smoke-test:
+    docker:
+      - image: alpine:latest
+    steps:
+      - run: apk add --update curl
+      - run:
+          name: smoke test
+          command: |
+            URL="htps://blog.udacity.com/"
+            if curl -s --head ${URL}
+            then
+              return 0
+            else
+              return 1
+            fi
+
 workflows:
   main:
     jobs:
@@ -63,3 +79,4 @@ workflows:
       - configure-infra:
           requires:
             - create-infra
+      - smoke-test
