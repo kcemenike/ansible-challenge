@@ -1,13 +1,13 @@
 version: '2.1'
-# orbs:
-#   aws-cli: circleci/aws-cli@3.1
+orbs:
+  aws-cli: circleci/aws-cli@3.1
 jobs:
   aws-get-instance-list:
-    docker:
-      - image: amazon/aws-cli
+    # docker:
+    #   - image: amazon/aws-cli
     # environment:
     #   - PARAM_AWS_CLI_REGION: us-west-2
-    # executor: aws-cli/default
+    executor: aws-cli/default
     steps:
       - checkout
       # - aws-cli/setup
@@ -32,9 +32,9 @@ jobs:
       #     paths:
       #       - ./inventory.txt
   restore-inventory:
-    # executor: aws-cli/default
-    docker:
-      - image: amazon/aws-cli
+    executor: aws-cli/default
+    # docker:
+    #   - image: amazon/aws-cli
     steps:
       - checkout
       - attach_workspace:
