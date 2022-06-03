@@ -34,6 +34,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref udacityVPC
+      AvailabilityZone: !Select [0, !GetAZs ]
       CidrBlock: 10.0.2.0/16
   # Set up routing and association
   publicRouteTable:
