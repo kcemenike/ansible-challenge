@@ -88,8 +88,7 @@ Resources:
     Properties:
       ImageId: ami-0ee8244746ec5d6d4 # Ubuntu
       InstanceType: t2.micro
-      AvailabilityZone:
-        Fn::Select: !Select [0, !GetAZs ]
+      AvailabilityZone: !Select [0, !GetAZs ]
       KeyName: myKP # Created with `aws ec2 create-key-pair --key-name myKP >> myKP.pem`
       NetworkInterfaces:
         - DeviceIndex: 0
