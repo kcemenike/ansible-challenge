@@ -60,7 +60,7 @@ jobs:
 workflows:
   main:
     jobs:
-      # - create-infra
+      - create-infra
       - configure-infra
-        # requires:
-        #   - create-infra
+        requires:
+          - create-infra
