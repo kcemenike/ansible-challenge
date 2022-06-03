@@ -1,6 +1,6 @@
 ---
-- name: 'update and upgrardepackages.'
-  become: true
+- name: 'update and upgrade packages.'
+  become: yes
   apt:
     upgrade: yes
     update_cache: yes
