@@ -42,7 +42,7 @@ jobs:
       - run: cat inventory.txt
   test:
     docker:
-      - image:
+      - image: amazon/aws-cli
     steps:
       - checkout
       - run: echo hello world
