@@ -1,36 +1,12 @@
 version: '2.1'
 orbs:
-  aws-cli: circleci/aws-cli@3.1
+  aws-cli: circleci/aws-cli@3.1.1
 jobs:
-  aws-get-instance-list:
-    executor: aws-cli/default
-    steps:
-      - checkout
-      - run: echo [all] > inventory.txt
-      - run:
-          name: Get instances
-          command: >
-            echo $(aws ec2 describe-instances 
-            --query 'Reservations[*].Instances[*].PublicIpAddress' 
-            --output text) >> inventory.txt
-      - run: ls -al
-      - run: cat inventory.txt
-      - persist_to_workspace:
-          root: .
-          paths:
-            - inventory.txt
-  restore-inventory:
-    executor: aws-cli/default
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: ls -al
-      - run: cat inventory.txt
   create-infra:
     executor: aws-cli/default
     steps:
       - checkout
+      - aws-cli/setup
       - run:
           name: Create Cloudformation stack
           command: >
@@ -70,7 +46,7 @@ jobs:
             ansible-playbook -i inventory.txt main-remote.yml
 
 workflows:
-  aws-cli:
+  main:
     jobs:
       # - aws-get-instance-list
       # - restore-inventory:
