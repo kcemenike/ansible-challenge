@@ -61,6 +61,6 @@ workflows:
   main:
     jobs:
       - create-infra
-      - configure-infra
+      - configure-infra:
         requires:
           - create-infra
