@@ -3,4 +3,4 @@
   hosts: web
 
   roles:
-   - print
+    - print

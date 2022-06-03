@@ -1,0 +1,127 @@
+# aws cloudformation create-stack --stack-name kcTest --template-body file://testcnf.yml --parameters ParameterKey=LocalIPAddress,ParameterValue=154.118.102.156/32
+Description: |
+  Kelechi EMENIKE / Udacity Challenge
+  This template deploys an Instance and a Security Group allowing inbound access to port 80 only (and unrestricted outbound access)
+Parameters:
+  LocalIPAddress:
+    Description: This is your local IP address, it will be used to configure security group ingress
+    Type: String
+    Default: 0.0.0.0/0
+Resources:
+  # Set up VPC
+  udacityVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      Tags:
+        - Key: name
+          Value: myFirstTestVPC
+  # Set up and attach internet gateway
+  igw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Udacity Internet Gateway
+  attachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref udacityVPC
+      InternetGatewayId: !Ref igw
+  # Setup subnet
+  publicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref udacityVPC
+      CidrBlock: 10.0.2.0/16
+  # Set up routing and association
+  publicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref udacityVPC
+  publicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0 # to any destination
+      GatewayId: !Ref igw
+  publicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref publicSubnet
+      RouteTableId: !Ref publicRouteTable
+  # Security groups
+  myWebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for my Web Server Instance
+      VpcId: !Ref udacityVPC
+      SecurityGroupIngress:
+        - CidrIp:
+            Ref: LocalIPAddress
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+          Description: Allows inbound comm on tcp port 80
+        - CidrIp:
+            Ref: LocalIPAddress
+          FromPort: 3000
+          IpProtocol: tcp
+          ToPort: 3000
+          Description: Allows inbound comm on tcp port 80
+        - CidrIp:
+            Ref: LocalIPAddress
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+          Description: Allows inbound comm on SSH port
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: -1
+          IpProtocol: -1
+          ToPort: -1
+          Description: Allows outward communication on all ports
+  # INSTANCES
+  myWebServerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0ee8244746ec5d6d4 # Ubuntu
+      InstanceType: t2.micro
+      KeyName: myKP # Created with `aws ec2 create-key-pair --key-name myKP >> myKP.pem`
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          AssociatePublicIpAddress: true
+          SubnetId: !Ref publicSubnet
+          GroupSet:
+            - !Ref myWebServerSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt update -y
+          sudo apt upgrade -y
+          sudo yum install -y apache2
+          sudo systemctl start apache2
+          sudo systemctl enable apache2
+      Tags:
+        - Key: name
+          Value: Web Server
+
+Outputs:
+  VPC:
+    Description: VPC
+    Value: !Ref udacityVPC
+  AZ1:
+    Description: Availability Zone
+    Value: !GetAtt
+      - publicSubnet
+      - AvailabilityZone
+  PublicSubnet:
+    Description: Public Subnet
+    Value: !Ref publicSubnet
+  Gateway:
+    Description: Internet Gateway
+    Value: !Ref igw
+  Instance:
+    Description: EC2 instance
+    Value: !Ref myWebServerInstance

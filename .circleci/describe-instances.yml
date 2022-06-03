@@ -40,30 +40,10 @@ jobs:
       #       - inventory
       - run: ls -al
       - run: cat inventory.txt
-  test:
-    docker:
-      - image:
-    steps:
-      - checkout
-      - run: echo hello world
-  create-infra:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Create Cloudformation stack
-          command: >
-            aws cloudformation deploy
-            --template-file ubuntu_server.yml
-            --stack-name myStack-${CIRCLE_WORKFLOW_ID:0.5}
-            --region us-west-2
 workflows:
   aws-cli:
     jobs:
-      - test
       - aws-config-and-get-instance-list
       - restore-inventory:
           requires:
             - aws-config-and-get-instance-list
-      - create-infra

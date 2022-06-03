@@ -13,7 +13,7 @@ Parameters:
   S3BucketName:
     Description: >
       A globally unique S3 bucket name. 
-      Please upload the src.zip to the bucket after creating this stack.
+      Please ensure the src.zip is in the bucket before creating this stack.
     Type: String
     Default: udagram-kelechi12345
   KeyPair:
@@ -63,16 +63,6 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: PublicRead
-      BucketName: !Ref S3BucketName
-      MetricsConfigurations:
-        - Id: EntireBucket
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: error.html
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -84,7 +74,6 @@ Resources:
           systemctl start httpd
           cd /var/www/html
           aws s3 cp s3://${S3BucketName}/src.zip .
-          aws s3 rm s3://${S3BucketName}/src.zip
           unzip -o src.zip
       ImageId: !Ref AMIToUse
       KeyName: !Ref KeyPair
@@ -199,7 +188,6 @@ Resources:
               - s3:Put*
               - s3:Get*
               - s3:List*
-              - s3:Delete*
             Resource:
               - !Sub arn:aws:s3:::${S3BucketName}/
               - !Sub arn:aws:s3:::${S3BucketName}/*
