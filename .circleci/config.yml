@@ -9,6 +9,7 @@ commands:
           name: destroy infrastructure
           when: on_fail
           command: aws cloudformation delete-stack --stack-name kc-${CIRCLE_WORKFLOW_ID:0:5}
+
 jobs:
   create-infra:
     executor: aws-cli/default
@@ -85,11 +86,12 @@ jobs:
       - run: ls -al
       - run:
           name: connect to server
-          command: ssh -i key.pem $(cat inventory.txt | grep -v [all]) -o StrictHostKeyChecking=no
+          command: ssh -i key.pem ubuntu@$(cat inventory.txt | grep -v [all]) -o StrictHostKeyChecking=no
       # - run:
       #     name: configure server
       #     command: |
       #       ansible-playbook -i inventory.txt main-remote.yml
+      - destroy-infra
 
 workflows:
   main:
