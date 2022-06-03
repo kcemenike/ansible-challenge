@@ -85,7 +85,7 @@ jobs:
       - run: ls -al
       - run:
           name: connect to server
-          command: ssh -i key.pem $(cat inventory.txt | grep -v [all]) -o StrickHostKeyChecking=no
+          command: ssh -i key.pem $(cat inventory.txt | grep -v [all]) -o StrictHostKeyChecking=no
       # - run:
       #     name: configure server
       #     command: |
@@ -94,10 +94,6 @@ jobs:
 workflows:
   main:
     jobs:
-      # - aws-get-instance-list
-      # - restore-inventory:
-      #     requires:
-      #       - aws-get-instance-list
       - create-infra
       - configure-infra:
           requires:
