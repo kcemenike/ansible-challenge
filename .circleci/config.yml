@@ -69,7 +69,7 @@ jobs:
       - run:
           name: configure server
           command: |
-            ansible-playbook -i inventory.txt playbook.yml
+            ansible-playbook -i inventory.txt main-remote.yml
 
 workflows:
   aws-cli:
@@ -79,4 +79,6 @@ workflows:
       #     requires:
       #       - aws-get-instance-list
       - create-infra
-      - configure-infra
+      - configure-infra:
+          requires:
+            - create-infra
