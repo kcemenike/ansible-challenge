@@ -31,7 +31,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ['63:e6:ee:ef:ea:88:47:06:47:b7:b6:0e:29:b9:2b:61']
+          fingerprints: ['a0:a8:5a:af:03:a2:b2:bd:b6:38:10:87:06:75:e3:b2']
       - run:
           name: Install deps
           command: |
