@@ -135,7 +135,7 @@ workflows:
   blue-to-green:
     jobs:
       - create-and-deploy-frontend
-      - promote-to-production:
+      - promote-to-prod:
           requires:
             - create-and-deploy-frontend
       - get-last-deployment-id
