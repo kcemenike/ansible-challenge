@@ -90,7 +90,7 @@ jobs:
           command: |
             aws cloudformation \
             list-exports --query "Exports[?Name==\`S3Bucket\`].Value" \
-            --no-paginate --output > ~/textfile.txt
+            --no-paginate --output text > ~/textfile.txt
       - persist_to_workspace:
           root: ~/
           paths:
