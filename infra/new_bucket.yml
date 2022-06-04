@@ -8,7 +8,7 @@ Parameters:
     Description: An environment name that will be prefixed to resource names
     Type: String
     Default: XXX
-  S3Bucket:
+  S3BucketName:
     Description: A globally unique S3 bucket name.
     Type: String
 
@@ -17,7 +17,7 @@ Resources:
     Type: 'AWS::S3::Bucket'
     Properties:
       AccessControl: PublicRead
-      BucketName: !Ref S3Bucket
+      BucketName: !Ref S3BucketName
       MetricsConfigurations:
         - Id: EntireBucket
       WebsiteConfiguration:

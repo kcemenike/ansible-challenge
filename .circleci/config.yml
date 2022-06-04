@@ -77,7 +77,7 @@ jobs:
             aws cloudformation deploy \
             --template-file infra/new_bucket.yml \
             --stack-name new-bucket-${CIRCLE_WORKFLOW_ID:0:7} \
-            --parameter-overrides S3Bucket='new-bucket-${CIRCLE_WORKFLOW_ID:0:7}'
+            --parameter-overrides S3BucketName='new-bucket-${CIRCLE_WORKFLOW_ID:0:7}'
       - run: aws s3 sync . s3://new-bucket-${CIRCLE_WORKFLOW_ID:0:7} --delete
   get-last-deployment-id:
     docker:
@@ -89,12 +89,13 @@ jobs:
           name: Fetch and save old pipelineID (bucketname) responsible for the last release
           command: |
             aws cloudformation \
-            list-exports --query "Exports[?Name==\`S3Bucket\`].Value" \
+            list-exports --query "Exports[?Name==\`S3BucketName\`].Value" \
             --no-paginate --output text > ~/textfile.txt
       - persist_to_workspace:
           root: ~/
           paths:
             - textfile.txt
+      - run: cat ~/textfile.txt
   promote-to-prod:
     docker:
       - image: amazon/aws-cli
@@ -106,7 +107,7 @@ jobs:
             aws cloudformation deploy \
             --template-file infra/cloudfront.yml \
             --stack-name cloudfront \
-            --parameter-overrides S3Bucket=new-bucket-${CIRCLE_WORKFLOW_ID:0:7}
+            --parameter-overrides S3BucketName=new-bucket-${CIRCLE_WORKFLOW_ID:0:7}
   clean-up-old-frontend:
     docker:
       - image: amazon/aws-cli
