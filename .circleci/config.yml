@@ -1,71 +1,6 @@
 version: '2.1'
-orbs:
-  aws-cli: circleci/aws-cli@3.1.1
-
-commands:
-  destroy-infra:
-    steps:
-      - run:
-          name: destroy infrastructure
-          when: on_fail
-          command: aws cloudformation delete-stack --stack-name kc-${CIRCLE_WORKFLOW_ID:0:5}
 
 jobs:
-  create-infra:
-    executor: aws-cli/default
-    steps:
-      - checkout
-      - aws-cli/setup
-      - run:
-          name: Create Cloudformation stack
-          command: >
-            aws cloudformation deploy
-            --template-file ubuntu_server.yml
-            --stack-name kc-${CIRCLE_WORKFLOW_ID:0:5}
-      - run:
-          name: Update inventory file
-          command: |
-            echo [all] > inventory.txt
-            aws ec2 describe-instances \
-            --filters Name=tag:aws:cloudformation:stack-name,Values=kc-${CIRCLE_WORKFLOW_ID:0:5} \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --output text >> inventory.txt
-      - run: cat inventory.txt
-      - persist_to_workspace:
-          root: .
-          paths:
-            - inventory.txt
-      - destroy-infra
-  configure-infra:
-    docker:
-      - image: python:3.10-alpine3.16
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - 'a0:a8:5a:af:03:a2:b2:bd:b6:38:10:87:06:75:e3:b2'
-      - run:
-          name: Install deps
-          command: |
-            apk add --update --no-cache ansible
-      - attach_workspace:
-          at: .
-      - run: ls -al
-      - run: cat inventory.txt
-      - run: ls -al ~/.ssh/
-      - run:
-          name: configure server
-          command: |
-            ansible-playbook -i inventory.txt main-remote.yml --key-file ~/.ssh/id_rsa_a0a85aaf03a2b2bdb63810870675e3b2
-  smoke-test:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: simulate error
-          command: return 1
-      - destroy-infra
   create-and-deploy-frontend:
     docker:
       - image: amazon/aws-cli
@@ -79,10 +14,10 @@ jobs:
             --stack-name new-bucket-${CIRCLE_WORKFLOW_ID:0:7} \
             --parameter-overrides S3BucketName="new-bucket-${CIRCLE_WORKFLOW_ID:0:7}"
       - run: aws s3 sync . s3://new-bucket-${CIRCLE_WORKFLOW_ID:0:7} --delete
-      # - run:
-      #     name: destroy-frontend
-      #     when: on_fail
-      #     command: aws cloudformation delete-stack --stack-name new-bucket-${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+          name: destroy-frontend
+          when: on_fail
+          command: aws cloudformation delete-stack --stack-name new-bucket-${CIRCLE_WORKFLOW_ID:0:7}
   get-last-deployment-id:
     docker:
       - image: amazon/aws-cli
@@ -134,15 +69,6 @@ jobs:
             aws cloudformation delete-stack --stack-name old-bucket
 
 workflows:
-  # main:
-  #   jobs:
-  #     - create-infra
-  #     - configure-infra:
-  #         requires:
-  #           - create-infra
-  #     - smoke-test:
-  #         requires:
-  #           - create-infra
   blue-to-green:
     jobs:
       - create-and-deploy-frontend
