@@ -95,6 +95,10 @@ jobs:
             aws cloudformation \
             list-exports --query "Exports[?Name==\`S3BucketName\`].Value" \
             --no-paginate --output text > ~/textfile.txt
+      - run: |
+          aws cloudformation \
+          list-exports --query "Exports[?Name==\`S3BucketName\`].Value" \
+          --no-paginate --output text
       - persist_to_workspace:
           root: ~/
           paths:
@@ -120,6 +124,8 @@ jobs:
       - run: yum install -y tar gzip
       - attach_workspace:
           at: ~/
+      - run: ls ~
+      - run: cat ~/textfile.txt
       - run:
           name: Destroy old bucket and cloudformation stack
           command: |
