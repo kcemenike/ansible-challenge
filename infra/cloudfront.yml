@@ -1,0 +1,41 @@
+Description: |
+  Create bucket and cloudfront dist
+  To run: aws cloudformation deploy --stack-name cloudfront --template-file ./infra/cloudfront.yml --tags project=udapeople
+
+Parameters:
+  #Parameters needed for Udagram project
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: XXX
+  S3BucketName:
+    Description: A globally unique S3 bucket name.
+    Type: String
+    Default: udapeople-kelechi
+
+Resources:
+  CloudFrontOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Origin Access Identity for Serverless Static Website
+  WebpageCDN:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !Sub '${S3BucketName}.s3.amazonaws.com'
+            Id: webpage
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
+        Enabled: True
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: False
+          TargetOriginId: webpage
+          ViewerProtocolPolicy: allow-all
+Outputs:
+  CloudFrontURL:
+    Value: !Join ['', ['https://', !GetAtt WebpageCDN.DomainName]]
+    Description: The website address of the cloudfront distribution

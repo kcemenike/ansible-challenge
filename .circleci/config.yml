@@ -66,14 +66,80 @@ jobs:
           name: simulate error
           command: return 1
       - destroy-infra
+  create-and-deploy-frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Execute new_bucket.yml - Create CF stack
+          command: |
+            aws cloudformation deploy \
+            --template-file new_bucket.yml \
+            --stack-name new-bucket-${CIRCLE_WORKFLOW_ID:0:7} \
+            --parameter-overrides S3Bucket='new-bucket-${CIRCLE_WORKFLOW_ID:0:7}'
+      - run: aws s3 sync . s3://new-bucket-${CIRCLE_WORKFLOW_ID:0:7} --delete
+  get-last-deployment-id:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - run:
+          name: Fetch and save old pipelineID (bucketname) responsible for the last release
+          command: |
+            aws cloudformation \
+            list-exports --query "Exports[?Name==\`S3Bucket\`].Value" \
+            --no-paginate --output > ~/textfile.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - textfile.txt
+  promote-to-prod:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Execute cloudfront.yml
+          command: |
+            aws cloudformation deploy \
+            --template-file cloudfront.yml \
+            --stack-name cloudfront \
+            --parameter-overrides S3Bucket=new-bucket-${CIRCLE_WORKFLOW_ID:0:7}
+  clean-up-old-frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Destroy old bucket and cloudformation stack
+          command: |
+            export OldBucket=$(cat ~/textfile.txt)
+            aws s3 rm "s3://${OldBucket}" --recursive
+            aws cloudformation delete-stack --stack-name old-bucket
 
 workflows:
-  main:
+  # main:
+  #   jobs:
+  #     - create-infra
+  #     - configure-infra:
+  #         requires:
+  #           - create-infra
+  #     - smoke-test:
+  #         requires:
+  #           - create-infra
+  blue-to-green:
     jobs:
-      - create-infra
-      # - configure-infra:
-      #     requires:
-      #       - create-infra
-      - smoke-test:
+      - create-and-deploy-frontend
+      - promote-to-production:
           requires:
-            - create-infra
+            - create-and-deploy-frontend
+      - get-last-deployment-id
+      - clean-up-old-frontend:
+          requires:
+            - get-last-deployment-id
+            - promote-to-prod

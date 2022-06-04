@@ -1,0 +1,52 @@
+Description: |
+  Create bucket and cloudfront dist
+  To run: aws cloudformation deploy --stack-name bucket-cloudfront --template-file ./infra/bucket_cloudfront.yml --tags project=udapeople
+
+Parameters:
+  #Parameters needed for Udagram project
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: XXX
+  MyBucketName:
+    Description: A globally unique S3 bucket name.
+    Type: String
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Ref MyBucketName
+      MetricsConfigurations:
+        - Id: EntireBucket
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+    # DeletionPolicy: Retain
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, /*]]
+
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt
+      - S3Bucket
+      - WebsiteURL
+    Description: URL for website hosted on S3
+  S3BucketSecureURL:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - S3Bucket
+          - DomainName
+    Description: Name of S3 bucket to hold website content
