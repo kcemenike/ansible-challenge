@@ -34,7 +34,12 @@ Resources:
             QueryString: False
           TargetOriginId: webpage
           ViewerProtocolPolicy: allow-all
+
 Outputs:
   CloudFrontURL:
     Value: !Join ['', ['https://', !GetAtt WebpageCDN.DomainName]]
     Description: The website address of the cloudfront distribution
+  S3BucketName:
+    Value: !Sub ${S3BucketName}
+    Export:
+      Name: S3BucketName
