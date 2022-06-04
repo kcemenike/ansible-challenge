@@ -13,7 +13,7 @@ jobs:
             --template-file infra/new_bucket.yml \
             --stack-name new-bucket-${CIRCLE_WORKFLOW_ID:0:7} \
             --parameter-overrides S3BucketName="new-bucket-${CIRCLE_WORKFLOW_ID:0:7}"
-      - run: aws s3 sync . s3://new-bucket-${CIRCLE_WORKFLOW_ID:0:7} --delete
+      - run: aws s3 sync ./src/ s3://new-bucket-${CIRCLE_WORKFLOW_ID:0:7} --delete
       - run:
           name: destroy-frontend
           when: on_fail
@@ -71,12 +71,28 @@ jobs:
 workflows:
   blue-to-green:
     jobs:
-      - create-and-deploy-frontend
+      - create-and-deploy-frontend:
+          filters:
+            branches:
+              only:
+                - main
       - promote-to-prod:
+          filters:
+            branches:
+              only:
+                - main
           requires:
             - create-and-deploy-frontend
-      - get-last-deployment-id
+      - get-last-deployment-id:
+          filters:
+            branches:
+              only:
+                - main
       - clean-up-old-frontend:
+          filters:
+            branches:
+              only:
+                - main
           requires:
             - get-last-deployment-id
             - promote-to-prod
